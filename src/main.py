@@ -1,5 +1,4 @@
-from fastapi import FastAPI, Query
-from typing import List
+from fastapi import FastAPI
 
 from orders.router import router as orders_router
 
