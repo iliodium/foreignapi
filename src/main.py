@@ -1,6 +1,9 @@
-from fastapi import FastAPI
+import os
+import sys
 
-from orders.router import router as orders_router
+from fastapi import FastAPI
+sys.path.insert(1, os.path.join(sys.path[0], '..'))
+from order.router import router as orders_router
 
 app = FastAPI(
     title="Cafeteria"

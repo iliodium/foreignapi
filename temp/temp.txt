@@ -1,0 +1,1 @@
+uvicorn --app-dir D:\Projects\PetProject\foreignapi\src main:app --reload
