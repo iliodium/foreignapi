@@ -107,68 +107,70 @@ conn = psycopg2.connect("dbname=PetProject user=postgres password=1234")
 cur = conn.cursor()
 
 sql = """create table if not exists dish(
-        dish_id integer primary key,
-        name varchar(60)
+        dish_id serial primary key,
+        name varchar(60) UNIQUE
         );
         
         create table if not exists customer(
-        customer_id integer primary key,
-        name varchar(60),
-        auth varchar(10)
+        customer_id serial primary key,
+        name varchar(60) UNIQUE
         );
         
-        create schema menu;
-        alter schema menu owner to postgres;
+        create table if not exists menu(
+        customer_id integer,
+        dish_id integer,
+        cost integer,
+        FOREIGN KEY (customer_id) REFERENCES customer (customer_id),
+        FOREIGN KEY (dish_id) REFERENCES dish (dish_id),
+        unique (customer_id, dish_id)
+        );
+
 """
 cur.execute(sql)
+conn.commit()
 
 for ind, val in enumerate(dishes, start=1):
     sql = """
-    INSERT INTO dish (dish_id, name) VALUES
-    (%s, %s);
+    INSERT INTO dish (name) VALUES
+    (%s);
     """
-    cur.execute(sql, (ind, val))
+    cur.execute(sql, (val, ))
+conn.commit()
 
-cust = [(1, 'Заведение1', 'key1'),
-        (2, 'Заведение2', 'key2'),
-        (3, 'Заведение3', 'key3'),
-        (4, 'Заведение4', 'key4'),
-        (5, 'Заведение5', 'key5'),
-        (6, 'Заведение6', 'key6'),
-        (7, 'Заведение7', 'key7'),
-        (8, 'Заведение8', 'key8'),
-        (9, 'Заведение9', 'key9'),
-        (10, 'Заведение10', 'key10')]
+
+cust = [(1, 'Заведение1'),
+        (2, 'Заведение2'),
+        (3, 'Заведение3'),
+        (4, 'Заведение4'),
+        (5, 'Заведение5'),
+        (6, 'Заведение6'),
+        (7, 'Заведение7'),
+        (8, 'Заведение8'),
+        (9, 'Заведение9'),
+        (10, 'Заведение10')]
 
 for i1 in cust:
-    i, j, k = i1
+    i, j = i1
 
     sql = """
-    INSERT INTO customer (customer_id, name, auth) VALUES
-    (%s, %s, %s);
+    INSERT INTO customer (name) VALUES
+    (%s);
     """
-    cur.execute(sql, (i, j, k))
+    cur.execute(sql, (j,))
+conn.commit()
 
 
 for i1 in cust:
-    ind, _, key = i1
-
-    sql1 = """create table if not exists menu.menu_{}(
-        dish_id integer primary key,
-        cost real,
-        FOREIGN KEY (dish_id) REFERENCES dish (dish_id)
-);
-""".format(key)
-    cur.execute(sql1)
+    ind, _ = i1
 
     for di in random.sample(dishes, 30):
         id_d = dishes.index(di) + 1
         sql = """
-        INSERT INTO menu.menu_{} (dish_id, cost) VALUES
-        (%s, %s);
-        """.format(key)
-
-        cur.execute(sql, (id_d, random.randint(10000, 100000) / 100))
+        INSERT INTO menu(customer_id, dish_id, cost)
+        VALUES
+        (%s,%s,%s);
+        """
+        cur.execute(sql, (ind, id_d, random.randint(1, 10000),))
 
 conn.commit()
 cur.close()
