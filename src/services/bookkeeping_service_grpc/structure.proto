@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+message Check{
+  bytes check = 1;
+}
+
+message Response{
+  string answer = 1;
+  int32 tax = 2;
+}
+
+service BookkeepingService{
+  rpc SendCheck(Check) returns (Response) {};
+}

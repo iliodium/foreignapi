@@ -5,34 +5,12 @@ from src.database import get_async_session
 from src.models import CustomerOrm, MenuOrm, DishOrm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.utils import StatusEnum, DishEnum
+from src.utils import StatusEnum, DishEnum, check_exist_customer
 
 router = APIRouter(
     prefix="/menu",
     tags=["Menu"],
 )
-
-
-async def check_exist_customer(customer_name: str = "Заведение3",
-                               session: AsyncSession = Depends(get_async_session)) -> dict:
-    query = (
-        select(CustomerOrm)
-        .where(CustomerOrm.name == customer_name)
-        .limit(1)
-    )
-    result = await session.execute(query)
-    result = result.scalars().all()
-
-    if len(result) == 0:
-        raise HTTPException(status_code=404, detail={
-            "status": StatusEnum.error,
-            "customer_id": None,
-            "details": "Customer does not exist"
-        })
-
-    return {"status": StatusEnum.good,
-            "customer_id": result[0].customer_id,
-            "details": "Customer exists"}
 
 
 async def check_exist_dish(dish_name: str = "Суп",
@@ -49,13 +27,13 @@ async def check_exist_dish(dish_name: str = "Суп",
         return {
             "status": StatusEnum.error,
             "dish_id": None,
-            "details": "Dish does not exist"
+            "details": DishEnum.dish_not_exist
         }
 
     return {
         "status": StatusEnum.good,
         "dish_id": result[0].dish_id,
-        "details": "Dish exist"
+        "details": DishEnum.dish_exist
     }
 
 
@@ -206,7 +184,7 @@ async def add_dish_to_menu(customer_name: str = "Заведение3",
     else:
         return {
             "status": StatusEnum.error,
-            "details": DishEnum.already_exists,
+            "details": DishEnum.already_in_menu,
         }
 
     return {

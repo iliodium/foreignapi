@@ -2,10 +2,10 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from grpc_service import structure_pb2 as grpc__service_dot_structure__pb2
+from src.services.bookkeeping_service_grpc import structure_pb2 as src_dot_services_dot_bookkeeping__service__grpc_dot_structure__pb2
 
 
-class CheckServiceStub(object):
+class BookkeepingServiceStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -15,13 +15,13 @@ class CheckServiceStub(object):
             channel: A grpc.Channel.
         """
         self.SendCheck = channel.unary_unary(
-                '/CheckService/SendCheck',
-                request_serializer=grpc__service_dot_structure__pb2.Check.SerializeToString,
-                response_deserializer=grpc__service_dot_structure__pb2.Response.FromString,
+                '/BookkeepingService/SendCheck',
+                request_serializer=src_dot_services_dot_bookkeeping__service__grpc_dot_structure__pb2.Check.SerializeToString,
+                response_deserializer=src_dot_services_dot_bookkeeping__service__grpc_dot_structure__pb2.Response.FromString,
                 )
 
 
-class CheckServiceServicer(object):
+class BookkeepingServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def SendCheck(self, request, context):
@@ -31,21 +31,21 @@ class CheckServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_CheckServiceServicer_to_server(servicer, server):
+def add_BookkeepingServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'SendCheck': grpc.unary_unary_rpc_method_handler(
                     servicer.SendCheck,
-                    request_deserializer=grpc__service_dot_structure__pb2.Check.FromString,
-                    response_serializer=grpc__service_dot_structure__pb2.Response.SerializeToString,
+                    request_deserializer=src_dot_services_dot_bookkeeping__service__grpc_dot_structure__pb2.Check.FromString,
+                    response_serializer=src_dot_services_dot_bookkeeping__service__grpc_dot_structure__pb2.Response.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'CheckService', rpc_method_handlers)
+            'BookkeepingService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class CheckService(object):
+class BookkeepingService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -59,8 +59,8 @@ class CheckService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/CheckService/SendCheck',
-            grpc__service_dot_structure__pb2.Check.SerializeToString,
-            grpc__service_dot_structure__pb2.Response.FromString,
+        return grpc.experimental.unary_unary(request, target, '/BookkeepingService/SendCheck',
+            src_dot_services_dot_bookkeeping__service__grpc_dot_structure__pb2.Check.SerializeToString,
+            src_dot_services_dot_bookkeeping__service__grpc_dot_structure__pb2.Response.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

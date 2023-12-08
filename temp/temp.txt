@@ -1,1 +1,2 @@
 uvicorn --app-dir D:\Projects\PetProject\foreignapi\src main:app --reload
+python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. .\src\services\bookkeeping_service_grpc\structure.proto
