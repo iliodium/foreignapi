@@ -1,23 +1,25 @@
 import pickle
 import json
 
+import aiohttp
 from sqlalchemy import select
 from fastapi import APIRouter, Depends
 from google.protobuf.json_format import MessageToJson
 
+from src.config import BOOKKEEPING_REST_NAME, BOOKKEEPING_REST_PORT
 from src.database import get_async_session
 from src.models import CustomerOrm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.services.bookkeeping_service_grpc.client import BookkeepingServiceClient as BookkeepingGRPC
-from src.services.config import HOST, PORT, aiohttp_session
-from src.services.utils import calculate_tax
 from src.utils import check_exist_customer
 
 router = APIRouter(
     prefix="/order",
     tags=["Order"],
 )
+
+aiohttp_session = aiohttp.ClientSession()
 
 
 @router.get("/v1")
@@ -37,8 +39,9 @@ async def get_order(customer_name: str = "Заведение3",
 
     check = {i.dish.name: i.cost / 100 for i in result[0].menu if i.dish.name in order}
 
-    async with aiohttp_session.get(f'http://{HOST}:{PORT + 1}/BookkeepingService/v1', data=pickle.dumps(check)) as resp:
-        result_rest = await resp.text()
+    async with aiohttp_session.get(f'http://{BOOKKEEPING_REST_NAME}:{BOOKKEEPING_REST_PORT}/BookkeepingService/v1',
+                                   data=pickle.dumps(check)) as resp:
+        result_rest: str = await resp.text()
 
     bookkeeping = BookkeepingGRPC()
     response_grpc = bookkeeping.send_check(check)
@@ -50,8 +53,7 @@ async def get_order(customer_name: str = "Заведение3",
         check[i] = None
 
     check["summa"] = summa
-
-    check["summa_after_tax_rest"] = float(result_rest) / 100
+    check["summa_after_tax_rest"] = int(result_rest) / 100
     check["summa_after_tax_grpc"] = result_grpc['tax'] / 100
 
     return check

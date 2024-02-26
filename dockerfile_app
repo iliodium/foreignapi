@@ -1,0 +1,16 @@
+FROM python:3.12.1-alpine3.19
+
+WORKDIR /app
+
+COPY ./requirements/dev.txt ./requirements.txt
+
+RUN \
+    apk add --no-cache python3 postgresql-libs && \
+    apk add --no-cache --virtual .build-deps gcc python3-dev musl-dev postgresql-dev && \
+    pip install --no-cache-dir --upgrade -r ./requirements.txt
+
+COPY src ./src
+
+ENV PORT=8321
+
+CMD ["sh", "-c", "uvicorn --app-dir ./src main:app --host 0.0.0.0 --port $PORT"]

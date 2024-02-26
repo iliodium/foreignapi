@@ -1,0 +1,81 @@
+version: "3"
+
+services:
+  app:
+    container_name: app
+    image: app:01
+    build:
+      context: .
+      dockerfile: dockerfile_app
+    ports:
+      - ${APP_EXTERNAL_PORT}:${APP_INTERNAL_PORT}
+    networks:
+      - outside_network
+      - db_network
+      - bookkeeping_rest_network
+      - bookkeeping_grpc_network
+    environment:
+      - PORT=${APP_INTERNAL_PORT}
+    env_file:
+      - .env
+
+  db:
+    container_name: ${DB_HOST}
+    image: postgres:16.1-alpine3.19
+    restart: always
+    networks:
+      - db_network
+    secrets:
+      - db_password
+      - db_name
+      - db_user
+
+    environment:
+      POSTGRES_DB: "cat /run/secrets/db_name"
+      POSTGRES_USER: "cat /run/secrets/db_user"
+      POSTGRES_PASSWORD: "cat /run/secrets/db_password"
+
+    volumes:
+      - pgdbdata:/var/lib/postgresql/data/
+
+
+
+# psql postgres://postgres:1234@localhost:5432/PetProject
+# psql postgres://postgres:1234@postgres_db_container:10000/PetProject
+#
+# pg_dump -U postgres -Fc PetProject > dump.dump
+# docker cp dump.dump pgdb:/dump.dump
+#
+# docker exec -i pgdb dropdb -U postgres -f PetProject
+# docker exec -i pgdb pg_restore -U postgres -d postgres -C dump.dump
+
+networks:
+  db_network:
+    driver: bridge
+    internal: true
+
+  outside_network:
+    driver: bridge
+    name: outside_network
+
+  bookkeeping_grpc_network:
+    external: true
+    name: bookkeeping_grpc_network
+
+  bookkeeping_rest_network:
+    external: true
+    name: bookkeeping_rest_network
+
+volumes:
+  pgdbdata:
+
+secrets:
+  db_user:
+    file: ./secrets/db_user.txt
+  db_name:
+    file: ./secrets/db_name.txt
+  db_password:
+    file: ./secrets/db_pass.txt
+
+
+
