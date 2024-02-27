@@ -3,7 +3,7 @@ version: "3"
 services:
   app:
     container_name: app
-    image: app:01
+    image: app:03
     build:
       context: .
       dockerfile: dockerfile_app
@@ -14,21 +14,23 @@ services:
       - db_network
       - bookkeeping_rest_network
       - bookkeeping_grpc_network
+      - rabbitmq_network
+
     environment:
-      - PORT=${APP_INTERNAL_PORT}
+      DB_NAME: "PetProject"
+      DB_USER: "postgres"
+      DB_PASS: 1234
+      PORT: ${APP_INTERNAL_PORT}
+
     env_file:
       - .env
 
   db:
     container_name: ${DB_HOST}
-    image: postgres:16.1-alpine3.19
+    image: postgres:16.2-alpine3.19
     restart: always
     networks:
       - db_network
-    secrets:
-      - db_password
-      - db_name
-      - db_user
 
     environment:
       POSTGRES_DB: "cat /run/secrets/db_name"
@@ -36,18 +38,33 @@ services:
       POSTGRES_PASSWORD: "cat /run/secrets/db_password"
 
     volumes:
-      - pgdbdata:/var/lib/postgresql/data/
+      - pgdbdata_1:/var/lib/postgresql/data/
 
-
+  rabbitmq:
+    image: rabbitmq:3.13.0-management
+    container_name: rabbitmq
+    hostname: rabbitmq
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=user
+    networks:
+      - rabbitmq_network
+      - outside_network
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+    ports:
+      - 8081:15672
 
 # psql postgres://postgres:1234@localhost:5432/PetProject
 # psql postgres://postgres:1234@postgres_db_container:10000/PetProject
 #
 # pg_dump -U postgres -Fc PetProject > dump.dump
-# docker cp dump.dump pgdb:/dump.dump
+# docker cp dump.dump postgres_db_container:/dump.dump
 #
-# docker exec -i pgdb dropdb -U postgres -f PetProject
-# docker exec -i pgdb pg_restore -U postgres -d postgres -C dump.dump
+# docker exec -i postgres_db_container dropdb -U postgres -f PetProject
+# docker exec -i postgres_db_container pg_restore -U postgres -d postgres -C dump.dump
+
 
 networks:
   db_network:
@@ -66,8 +83,17 @@ networks:
     external: true
     name: bookkeeping_rest_network
 
+  rabbitmq_network:
+    external: true
+    driver: bridge
+    internal: true
+    name: rabbitmq_network
+
 volumes:
-  pgdbdata:
+  pgdbdata_1:
+    name: "my-app-data_1"
+  rabbitmqdata:
+    name: "my-rabbitmq-data"
 
 secrets:
   db_user:
